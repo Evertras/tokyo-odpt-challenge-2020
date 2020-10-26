@@ -1,0 +1,6 @@
+# Direnv
+.envrc
+
+# Downloaded data
+/data
+
