@@ -14,9 +14,26 @@ else
 	@echo hm
 endif
 
+# Build everything
+build: bin/importer
+	# Available binaries in ./bin
+	@ls bin
+
 # Delete all the stuff we've done
 clean:
+	rm -rf ./bin
 
+################################################################################
+# Dependencies
+GO_FILES = $(shell find . -type f -name '*.go')
+
+################################################################################
+# Compiling our CLI stuff
+bin:
+	mkdir -p bin
+
+bin/importer: bin $(GO_FILES)
+	go build -o bin/importer ./cmd/importer/main.go
 
 ################################################################################
 # Data dump API

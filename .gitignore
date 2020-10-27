@@ -4,3 +4,6 @@
 # Downloaded data
 /data
 
+# Compiled binaries
+/bin
+

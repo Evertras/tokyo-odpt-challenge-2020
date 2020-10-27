@@ -1,10 +1,24 @@
-#docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.9.3
 version: '3.7'
+
 services:
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.9.3
     ports:
       - '9200:9200'
     environment:
       discovery.type: single-node
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.9.3
+    ports:
+      - '5601:5601'
+    networks:
+      - elastic
+
+networks:
+  elastic:
+    driver: bridge
 
