@@ -12,12 +12,53 @@ import (
 	"github.com/evertras/tokyo-odpt-challenge-2020/pkg/odpt"
 )
 
-func ImportPassengerSurvey(ctx context.Context, esClient *elasticsearch.Client, ps []*odpt.PassengerSurvey) error {
-	converted := FromODPTPassengerSurvey(ps)
+type Importer struct {
+	esClient      *elasticsearch.Client
+	stationLookup odpt.StationLookup
+}
+
+func NewImporter(esClient *elasticsearch.Client, stationLookup odpt.StationLookup) *Importer {
+	return &Importer{
+		esClient:      esClient,
+		stationLookup: stationLookup,
+	}
+}
+
+func (i *Importer) ImportPassengerSurvey(ctx context.Context, ps []*odpt.PassengerSurvey) error {
+	converted := FromODPTPassengerSurvey(ps, i.stationLookup)
+
+	_, err := i.esClient.Indices.Delete([]string{IndexNamePassengerSurvey})
+
+	if err != nil {
+		return fmt.Errorf("esapi.IndicesDelete: %w", err)
+	}
+
+	_, err = i.esClient.Indices.Create(IndexNamePassengerSurvey)
+
+	if err != nil {
+		return fmt.Errorf("esapi.IndicesCreate: %w", err)
+	}
+
+	indexMappingBody, err := genIndexMappingBody(map[string]string{
+		"location": "geo_point",
+	})
+
+	res, err := i.esClient.Indices.PutMapping(
+		indexMappingBody,
+		i.esClient.Indices.PutMapping.WithIndex(IndexNamePassengerSurvey),
+	)
+
+	if err != nil {
+		return fmt.Errorf("creating index with mapping: %w", err)
+	}
+
+	if res.StatusCode != 200 {
+		panic(res)
+	}
 
 	bulk, err := esutil.NewBulkIndexer(esutil.BulkIndexerConfig{
-		Index: IndexNamePassengerSurvey,
-		Client: esClient,
+		Index:  IndexNamePassengerSurvey,
+		Client: i.esClient,
 		OnError: func(ctx context.Context, err error) {
 			log.Println("ERR:", err)
 		},
@@ -36,7 +77,7 @@ func ImportPassengerSurvey(ctx context.Context, esClient *elasticsearch.Client, 
 
 		err = bulk.Add(ctx, esutil.BulkIndexerItem{
 			Action: "index",
-			Body:  bytes.NewReader(data),
+			Body:   bytes.NewReader(data),
 		})
 
 		if err != nil {

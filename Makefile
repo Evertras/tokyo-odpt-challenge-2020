@@ -36,6 +36,12 @@ bin/importer: bin $(GO_FILES)
 	go build -o bin/importer ./cmd/importer/main.go
 
 ################################################################################
+# Elasticsearch helpers
+clear-es:
+	curl -XDELETE 'http://localhost:9200/passenger-survey'
+	@echo
+
+################################################################################
 # Data dump API
 #
 # These are relatively large, static data dumps that can be downloaded once and

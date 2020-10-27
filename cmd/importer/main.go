@@ -20,7 +20,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println(fmt.Sprintf("Got %d: sample %+v", len(ps), ps[0]))
+	log.Println(fmt.Sprintf("Got %d passenger surveys", len(ps)))
+
+	stations, err := odpt.LoadStationsJSON("./data/Stations.json")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println(fmt.Sprintf("Got %d stations", len(stations)))
+	log.Println(fmt.Sprintf("%+v", stations[0]))
+
+	stationLookup := odpt.NewStationLookup(stations)
+	log.Println(fmt.Sprintf("%+v", stationLookup["odpt.Station:JR-East.ChuoRapid.Shinjuku"]))
 
 	es, err := elasticsearch.NewDefaultClient()
 	if err != nil {
@@ -35,7 +47,9 @@ func main() {
 	log.Println(res)
 	res.Body.Close()
 
-	err = esdata.ImportPassengerSurvey(ctx, es, ps)
+	importer := esdata.NewImporter(es, stationLookup)
+
+	err = importer.ImportPassengerSurvey(ctx, ps)
 
 	if err != nil {
 		log.Fatal(err)

@@ -8,11 +8,8 @@ import (
 )
 
 type PassengerSurvey struct {
-	ContextURL             string                  `json:"@context"`
-	ID                     string                  `json:"@id"`
-	Type                   string                  `json:"@type"`
+	Base
 	Date                   time.Time               `json:"dc:date"`
-	SameAs                 string                  `json:"owl:sameAs"`
 	Operator               string                  `json:"odpt:operator"`
 	Station                []string                `json:"odpt:station"`
 	Railway                []string                `json:"odpt:railway"`

@@ -8,33 +8,52 @@ import (
 )
 
 type PassengerSurvey struct {
-	Date              time.Time
-	IncludeAlighting  bool
-	Operator          string
-	SurveyYear        int
-	PassengerJourneys int
-	Line              string
-	Company           string
-	Station           string
+	Date             time.Time `json:"date"`
+	IncludeAlighting bool      `json:"includeAlighting"`
+	Operator         string    `json:"operator"`
+	SurveyYear       int       `json:"surveyYear"`
+	PassengersPerDay int       `json:"passengersPerDay"`
+	Line             string    `json:"line"`
+	Station          string    `json:"station"`
+	Location         Location  `json:"location"`
 }
 
-func FromODPTPassengerSurvey(ps []*odpt.PassengerSurvey) []*PassengerSurvey {
-	esps := make([]*PassengerSurvey, len(ps))
+func FromODPTPassengerSurvey(ps []*odpt.PassengerSurvey, stations odpt.StationLookup) []*PassengerSurvey {
+	esps := make([]*PassengerSurvey, len(ps))[:0]
 
-	for i, entry := range ps {
-		for _, surveyObject := range entry.PassengerSurveyObjects {
+	for _, entry := range ps {
+		for _, station := range entry.Station {
+			stationData := stations[station]
+
+			if stationData == nil {
+				panic(station)
+			}
+
 			for _, railway := range entry.Railway {
-				trimmed := strings.Split(railway, ":")[1]
-				split := strings.Split(trimmed, ".")
+				trimmed := RemoveType(railway)
+				split := strings.SplitN(trimmed, ".", 2)
 
-				esps[i] = &PassengerSurvey{
-					Date:              entry.Date,
-					IncludeAlighting:  entry.IncludeAlighting,
-					Operator:          entry.Operator,
-					SurveyYear:        surveyObject.SurveyYear,
-					PassengerJourneys: surveyObject.PassengerJourneys,
-					Line:              split[1],
-					Station:           entry.Station[0],
+				line := split[0]
+
+				if len(split) > 1 {
+					line = split[1]
+				}
+
+				for _, surveyObject := range entry.PassengerSurveyObjects {
+					esps = append(esps, &PassengerSurvey{
+						Date:             entry.Date,
+						IncludeAlighting: entry.IncludeAlighting,
+						Operator:         RemoveType(entry.Operator),
+						SurveyYear:       surveyObject.SurveyYear,
+						PassengersPerDay: surveyObject.PassengerJourneys,
+						Line:             line,
+						Station:          RemoveType(stationData.Title),
+
+						Location: Location{
+							Latitude:  stationData.Latitude,
+							Longitude: stationData.Longitude,
+						},
+					})
 				}
 			}
 		}
