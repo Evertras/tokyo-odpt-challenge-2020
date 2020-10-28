@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
 )
 
 type PassengerSurvey struct {
 	Base
-	Date                   time.Time               `json:"dc:date"`
+	Date
 	Operator               string                  `json:"odpt:operator"`
 	Station                []string                `json:"odpt:station"`
 	Railway                []string                `json:"odpt:railway"`
@@ -25,7 +24,7 @@ type PassengerSurveyObject struct {
 // LoadPassengerSurveysJSON loads all PassengerSurvey entries from a static JSON
 // file created by the data dump API
 func LoadPassengerSurveysJSON(filename string) ([]*PassengerSurvey, error) {
-	f, err := os.Open("./data/PassengerSurvey.json")
+	f, err := os.Open(filename)
 
 	if err != nil {
 		return nil, fmt.Errorf("os.Open: %w", err)

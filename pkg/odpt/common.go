@@ -1,5 +1,7 @@
 package odpt
 
+import "time"
+
 type Base struct {
 	ContextURL             string                  `json:"@context"`
 	ID                     string                  `json:"@id"`
@@ -10,4 +12,8 @@ type Base struct {
 type Location struct {
 	Longitude  float64   `json:"geo:long"`
 	Latitude   float64   `json:"geo:lat"`
+}
+
+type Date struct {
+	Date time.Time `json:"dc:date"`
 }

@@ -34,6 +34,15 @@ func main() {
 	stationLookup := odpt.NewStationLookup(stations)
 	log.Println(fmt.Sprintf("%+v", stationLookup["odpt.Station:JR-East.ChuoRapid.Shinjuku"]))
 
+	bsp, err := odpt.LoadBusstopPoleJSON("./data/BusstopPole.json")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("Got %d bus stop poles", len(bsp))
+	log.Println(fmt.Sprintf("%+v", bsp[0]))
+
 	es, err := elasticsearch.NewDefaultClient()
 	if err != nil {
 		log.Fatalf("Error creating the client: %s", err)
@@ -50,6 +59,12 @@ func main() {
 	importer := esdata.NewImporter(es, stationLookup)
 
 	err = importer.ImportPassengerSurvey(ctx, ps)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = importer.ImportBusstopPole(ctx, bsp)
 
 	if err != nil {
 		log.Fatal(err)

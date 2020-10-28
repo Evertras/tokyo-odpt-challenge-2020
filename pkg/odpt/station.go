@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
 )
 
 type Station struct {
 	Base
 	Location
-	Date       time.Time `json:"dc:date"`
+	Date
 	Title      string    `json:"dc:title"`
 }
 
