@@ -20,4 +20,3 @@ type Bus struct {
 	FacingDegrees          float32   `json:"odpt:azimuth"`
 	DoorStatus             string    `json:"odpt:doorStatus"`
 }
-
