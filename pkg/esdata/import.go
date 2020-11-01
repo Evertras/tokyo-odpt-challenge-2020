@@ -49,7 +49,7 @@ func (i *Importer) DeleteAllDataIndices() error {
 }
 
 func (i *Importer) ImportPassengerSurvey(ctx context.Context, ps []*odpt.PassengerSurvey) error {
-	err := i.prepLocationMapping(IndexNamePassengerSurvey)
+	err := i.prepLocationMapping(IndexNamePassengerSurvey, []string{"location"})
 
 	if err != nil {
 		return fmt.Errorf("i.prepLocationMapping: %w", err)
@@ -74,7 +74,7 @@ func (i *Importer) ImportPassengerSurvey(ctx context.Context, ps []*odpt.Passeng
 }
 
 func (i *Importer) ImportBusStopPole(ctx context.Context, bsp []*odpt.BusStopPole) error {
-	err := i.prepLocationMapping(IndexNameBusStopPole)
+	err := i.prepLocationMapping(IndexNameBusStopPole, []string{"location"})
 	if err != nil {
 		return fmt.Errorf("i.prepLocationMapping: %w", err)
 	}
@@ -98,7 +98,7 @@ func (i *Importer) ImportBusStopPole(ctx context.Context, bsp []*odpt.BusStopPol
 }
 
 func (i *Importer) ImportBusRoutePattern(ctx context.Context, bsr []*odpt.BusRoutePattern) error {
-	err := i.prepLocationMapping(IndexNameBusRoutePattern)
+	err := i.prepLocationMapping(IndexNameBusRoutePattern, []string{"location", "nextLocation"})
 	if err != nil {
 		return fmt.Errorf("i.prepLocationMapping: %w", err)
 	}
@@ -121,7 +121,7 @@ func (i *Importer) ImportBusRoutePattern(ctx context.Context, bsr []*odpt.BusRou
 	return nil
 }
 
-func (i *Importer) prepLocationMapping(index string) error {
+func (i *Importer) prepLocationMapping(index string, locFields []string) error {
 	_, err := i.esClient.Indices.Delete([]string{index})
 
 	if err != nil {
@@ -134,9 +134,11 @@ func (i *Importer) prepLocationMapping(index string) error {
 		return fmt.Errorf("esapi.IndicesCreate: %w", err)
 	}
 
-	indexMappingBody, err := genIndexMappingBody(map[string]string{
-		"location": "geo_point",
-	})
+	mapping := make(map[string]string)
+	for _, field := range locFields {
+		mapping[field] = "geo_point"
+	}
+	indexMappingBody, err := genIndexMappingBody(mapping)
 
 	res, err := i.esClient.Indices.PutMapping(
 		indexMappingBody,
