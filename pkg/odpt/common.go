@@ -12,13 +12,10 @@ type Base struct {
 	ID         string `json:"@id"`
 	Type       string `json:"@type"`
 	SameAs     string `json:"owl:sameAs"`
+	Date time.Time `json:"dc:date"`
 }
 
 type Location struct {
 	Longitude float64 `json:"geo:long"`
 	Latitude  float64 `json:"geo:lat"`
-}
-
-type Date struct {
-	Date time.Time `json:"dc:date"`
 }

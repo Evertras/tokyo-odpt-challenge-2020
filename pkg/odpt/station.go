@@ -9,7 +9,6 @@ import (
 type Station struct {
 	Base
 	Location
-	Date
 	Title string `json:"dc:title"`
 }
 

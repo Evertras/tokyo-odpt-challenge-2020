@@ -8,7 +8,6 @@ import (
 
 type PassengerSurvey struct {
 	Base
-	Date
 	Operator               string                  `json:"odpt:operator"`
 	Station                []string                `json:"odpt:station"`
 	Railway                []string                `json:"odpt:railway"`

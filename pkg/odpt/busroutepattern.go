@@ -10,7 +10,6 @@ import (
 // BusRoutePattern describes a specific bus route
 type BusRoutePattern struct {
 	Base
-	Date
 
 	Valid     time.Time          `json:"dct:valid"`
 	Title     string             `json:"dc:title"`

@@ -13,7 +13,6 @@ type BusStopPoleLookup map[string]*BusStopPole
 // that may serve one or more buses
 type BusStopPole struct {
 	Base
-	Date
 	Location
 
 	Title          string            `json:"dc:title"`

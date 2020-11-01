@@ -16,6 +16,7 @@ type BusRoutePattern struct {
 	Location  *Location `json:"location,omitempty"`
 	Next      *Location `json:"nextLocation,omitempty"`
 	Direction string    `json:"direction"`
+	SameAs    string    `json:"sameAs"`
 }
 
 func FromODPTBusRoutePattern(bsr []*odpt.BusRoutePattern, poles odpt.BusStopPoleLookup) []*BusRoutePattern {
@@ -33,6 +34,7 @@ func FromODPTBusRoutePattern(bsr []*odpt.BusRoutePattern, poles odpt.BusStopPole
 				Operator: removeType(entry.Operator),
 				Route:    removeType(route),
 				Pattern:  entry.Pattern,
+				SameAs:   entry.SameAs,
 			}
 
 			if pole.Latitude != 0 {
