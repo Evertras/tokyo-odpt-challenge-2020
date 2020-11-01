@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/dhconnelly/rtreego"
 )
 
 type BusStopPoleLookup map[string]*BusStopPole
@@ -52,4 +54,16 @@ func NewBusStopPoleLookup(poles []*BusStopPole) BusStopPoleLookup {
 	}
 
 	return lookup
+}
+
+func NewBusStopPoleSpatialTree(poles []*BusStopPole) *rtreego.Rtree {
+	tree := rtreego.NewTree(2, 25, 50)
+
+	for _, pole := range poles {
+		if pole.Latitude > 0 {
+			tree.Insert(pole)
+		}
+	}
+
+	return tree
 }
