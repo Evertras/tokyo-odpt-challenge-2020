@@ -42,6 +42,7 @@ bin/importer: bin $(GO_FILES)
 ################################################################################
 # Elasticsearch helpers
 clear-es:
+	@echo "Deleting ES indices, some may not be found and that's fine"
 	curl -XDELETE 'http://localhost:9200/passenger-survey'
 	curl -XDELETE 'http://localhost:9200/bus-stop-pole'
 	curl -XDELETE 'http://localhost:9200/bus-route-pattern'
