@@ -19,3 +19,7 @@ type Location struct {
 	Longitude float64 `json:"geo:long"`
 	Latitude  float64 `json:"geo:lat"`
 }
+
+type Valid struct {
+	Valid time.Time `json:"dct:valid"`
+}

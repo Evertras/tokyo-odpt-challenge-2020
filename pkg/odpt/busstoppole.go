@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
 )
 
 type BusStopPoleLookup map[string]*BusStopPole
@@ -14,9 +13,9 @@ type BusStopPoleLookup map[string]*BusStopPole
 type BusStopPole struct {
 	Base
 	Location
+	Valid
 
 	Title          string            `json:"dc:title"`
-	Valid          time.Time         `json:"dct:valid"`
 	Kana           string            `json:"odpt:kana"`
 	TitleLocalized map[string]string `json:"title"`
 	Operator       []string          `json:"odpt:operator"`

@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
 )
 
 // BusRoutePattern describes a specific bus route
 type BusRoutePattern struct {
 	Base
+	Valid
 
-	Valid     time.Time          `json:"dct:valid"`
 	Title     string             `json:"dc:title"`
 	Kana      string             `json:"odpt:kana"`
 	Operator  string             `json:"odpt:operator"`
