@@ -17,7 +17,7 @@ func FromODPTBusStopPole(bsp []*odpt.BusStopPole) []*BusStopPole {
 
 	for _, entry := range bsp {
 		esbsp = append(esbsp, &BusStopPole{
-			Date:  entry.Date.Date,
+			Date:  entry.Date,
 			Title: entry.Title,
 			Location: Location{
 				Latitude:  entry.Latitude,

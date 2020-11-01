@@ -27,6 +27,7 @@ func NewImporter(
 
 func (i *Importer) DeleteAllDataIndices() error {
 	toDelete := []string{
+		IndexNameBus,
 		IndexNameBusRoutePattern,
 		IndexNameBusStopPole,
 		IndexNamePassengerSurvey,
@@ -73,6 +74,37 @@ func (i *Importer) ImportPassengerSurvey(ctx context.Context, ps []*odpt.Passeng
 	return nil
 }
 
+func (i *Importer) ImportBus(ctx context.Context, b []*odpt.Bus) error {
+	err := i.prepLocationMapping(IndexNameBus, []string{
+		"location",
+		"startingPoleLocation",
+		"terminalPoleLocation",
+		"fromStopLocation",
+		"toStopLocation",
+	})
+
+	if err != nil {
+		return fmt.Errorf("i.prepLocationMapping: %w", err)
+	}
+
+	bulk, err := startBulkAdder(ctx, i.esClient, IndexNameBus)
+	if err != nil {
+		return fmt.Errorf("startBulkAdder: %w", err)
+	}
+	defer bulk.closeWithLoggedError(ctx)
+
+	converted := FromODPTBus(b, i.busStopPoleLookup)
+
+	for i, entry := range converted {
+		err = bulk.add(ctx, entry)
+		if err != nil {
+			return fmt.Errorf("bulk.add #%d: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
 func (i *Importer) ImportBusStopPole(ctx context.Context, bsp []*odpt.BusStopPole) error {
 	err := i.prepLocationMapping(IndexNameBusStopPole, []string{"location"})
 	if err != nil {
@@ -88,7 +120,6 @@ func (i *Importer) ImportBusStopPole(ctx context.Context, bsp []*odpt.BusStopPol
 	converted := FromODPTBusStopPole(bsp)
 	for i, entry := range converted {
 		err = bulk.add(ctx, entry)
-
 		if err != nil {
 			return fmt.Errorf("bulk.add #%d: %w", i, err)
 		}

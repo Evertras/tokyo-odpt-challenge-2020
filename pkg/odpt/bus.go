@@ -7,8 +7,9 @@ type Bus struct {
 	Valid
 	Location
 
-	Number                 string    `json:"busNumber"`
-	Operator               string    `json:"operator"`
+	Route                  string    `json:"odpt:busroute"`
+	Number                 string    `json:"odpt:busNumber"`
+	Operator               string    `json:"odpt:operator"`
 	UpdateFrequencySeconds int       `json:"odpt:frequency"`
 	StartingBusStopPole    string    `json:"odpt:startingBusstopPole"`
 	TerminalBusStopPole    string    `json:"odpt:terminalBusstopPole"`

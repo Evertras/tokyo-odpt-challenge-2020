@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/elastic/go-elasticsearch/v7"
 
@@ -49,6 +50,28 @@ func main() {
 
 	bsr, err := odpt.LoadBusRoutePatternJSON("./data/BusroutePattern.json")
 
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	token := os.Getenv("TOKEN")
+
+	if token == "" {
+		log.Fatal("Need to set TOKEN")
+	}
+
+	client := odpt.NewClient(token)
+
+	b, err := client.GetAllBuses(ctx)
+
+	if err != nil {
+		log.Fatal("Failed to get all buses:", err)
+	}
+
+	log.Printf("%d buses currently running", len(b))
+
+	///////////////////////////////////////////////////////////////////////////
+	// Prepare ES
 	es, err := elasticsearch.NewDefaultClient()
 	if err != nil {
 		log.Fatalf("Error creating the client: %s", err)
@@ -85,4 +108,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	err = importer.ImportBus(ctx, b)
 }

@@ -28,7 +28,7 @@ func FromODPTBusRoutePattern(bsr []*odpt.BusRoutePattern, poles odpt.BusStopPole
 			untypedRoute := removeType(entry.Route)
 			route := removeFirstPeriodSeparatedChunk(untypedRoute)
 			pattern := &BusRoutePattern{
-				Date:     entry.Date.Date,
+				Date:     entry.Date,
 				Title:    entry.Title,
 				Kana:     entry.Kana,
 				Operator: removeType(entry.Operator),

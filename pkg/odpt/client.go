@@ -25,7 +25,7 @@ func NewClient(token string) *Client {
 	return &Client{
 		token: token,
 		httpClient: &http.Client{
-			Timeout: time.Second,
+			Timeout: time.Second * 5,
 		},
 	}
 }
@@ -41,8 +41,10 @@ func (c *Client) buildURL(resource string, query map[string]string) url.URL {
 
 	q.Add("acl:consumerKey", c.token)
 
-	for k, v := range query {
-		q.Add(k, v)
+	if query != nil {
+		for k, v := range query {
+			q.Add(k, v)
+		}
 	}
 
 	u.RawQuery = q.Encode()
@@ -50,10 +52,8 @@ func (c *Client) buildURL(resource string, query map[string]string) url.URL {
 	return u
 }
 
-func (c *Client) GetBusesForRoute(ctx context.Context, route string) ([]*Bus, error) {
-	u := c.buildURL("odpt:Bus", map[string]string{
-		"odpt:busroute": route,
-	})
+func (c *Client) getBuses(ctx context.Context, query map[string]string) ([]*Bus, error) {
+	u := c.buildURL("odpt:Bus", query)
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 
@@ -86,4 +86,14 @@ func (c *Client) GetBusesForRoute(ctx context.Context, route string) ([]*Bus, er
 	}
 
 	return buses, nil
+}
+
+func (c *Client) GetAllBuses(ctx context.Context) ([]*Bus, error) {
+	return c.getBuses(ctx, nil)
+}
+
+func (c *Client) GetBusesForRoute(ctx context.Context, route string) ([]*Bus, error) {
+	return c.getBuses(ctx, map[string]string{
+		"odpt:busroute": route,
+	})
 }

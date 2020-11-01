@@ -41,7 +41,7 @@ func FromODPTPassengerSurvey(ps []*odpt.PassengerSurvey, stations odpt.StationLo
 
 				for _, surveyObject := range entry.PassengerSurveyObjects {
 					esps = append(esps, &PassengerSurvey{
-						Date:             entry.Date.Date,
+						Date:             entry.Date,
 						IncludeAlighting: entry.IncludeAlighting,
 						Operator:         removeType(entry.Operator),
 						SurveyYear:       surveyObject.SurveyYear,
