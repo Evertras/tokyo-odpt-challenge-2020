@@ -10,7 +10,7 @@ type Station struct {
 	Base
 	Location
 	Date
-	Title      string    `json:"dc:title"`
+	Title string `json:"dc:title"`
 }
 
 type StationLookup map[string]*Station

@@ -14,6 +14,8 @@ import (
 func main() {
 	ctx := context.TODO()
 
+	///////////////////////////////////////////////////////////////////////////
+	// Load the data
 	ps, err := odpt.LoadPassengerSurveysJSON("./data/PassengerSurvey.json")
 
 	if err != nil {
@@ -34,7 +36,7 @@ func main() {
 	stationLookup := odpt.NewStationLookup(stations)
 	log.Println(fmt.Sprintf("%+v", stationLookup["odpt.Station:JR-East.ChuoRapid.Shinjuku"]))
 
-	bsp, err := odpt.LoadBusstopPoleJSON("./data/BusstopPole.json")
+	bsp, err := odpt.LoadBusStopPoleJSON("./data/BusstopPole.json")
 
 	if err != nil {
 		log.Fatal(err)
@@ -42,6 +44,10 @@ func main() {
 
 	log.Printf("Got %d bus stop poles", len(bsp))
 	log.Println(fmt.Sprintf("%+v", bsp[0]))
+
+	busStopPoleLookup := odpt.NewBusStopPoleLookup(bsp)
+
+	bsr, err := odpt.LoadBusRoutePatternJSON("./data/BusroutePattern.json")
 
 	es, err := elasticsearch.NewDefaultClient()
 	if err != nil {
@@ -56,16 +62,26 @@ func main() {
 	log.Println(res)
 	res.Body.Close()
 
-	importer := esdata.NewImporter(es, stationLookup)
+	///////////////////////////////////////////////////////////////////////////
+	// Do the importing
+	importer := esdata.NewImporter(es, stationLookup, busStopPoleLookup)
 
-	err = importer.ImportPassengerSurvey(ctx, ps)
-
+	err = importer.DeleteAllDataIndices()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = importer.ImportBusstopPole(ctx, bsp)
+	err = importer.ImportPassengerSurvey(ctx, ps)
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	err = importer.ImportBusStopPole(ctx, bsp)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = importer.ImportBusRoutePattern(ctx, bsr)
 	if err != nil {
 		log.Fatal(err)
 	}

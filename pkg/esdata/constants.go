@@ -1,6 +1,7 @@
 package esdata
 
 const (
-	IndexNameBusstopPole = "bus-stop-pole"
+	IndexNameBusStopPole     = "bus-stop-pole"
+	IndexNameBusRoutePattern = "bus-route-pattern"
 	IndexNamePassengerSurvey = "passenger-survey"
 )

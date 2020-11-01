@@ -7,3 +7,6 @@
 # Compiled binaries
 /bin
 
+# Temporary playground area for working on code
+cmd/sandbox/main.go
+

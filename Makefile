@@ -5,23 +5,27 @@
 # Stick this in a variable for easier conditionals later
 TOKEN=${ODPT_TOKEN}
 
+# Build everything
+build: bin/importer valid-token
+	# Available binaries in ./bin
+	@ls bin
+
 # Make sure we have a valid token
 valid-token:
 ifeq ($(TOKEN),)
-	@echo Please set ODPT_TOKEN environment variable
+	@echo "=====> ERROR: Please set ODPT_TOKEN environment variable"
 	@exit 1
 else
-	@echo hm
+	@echo "You have a valid token ready to go!"
 endif
-
-# Build everything
-build: bin/importer
-	# Available binaries in ./bin
-	@ls bin
 
 # Delete all the stuff we've done
 clean:
 	rm -rf ./bin
+
+fmt:
+	@go fmt ./pkg/...
+	@go fmt ./cmd/...
 
 ################################################################################
 # Dependencies
@@ -39,6 +43,8 @@ bin/importer: bin $(GO_FILES)
 # Elasticsearch helpers
 clear-es:
 	curl -XDELETE 'http://localhost:9200/passenger-survey'
+	curl -XDELETE 'http://localhost:9200/bus-stop-pole'
+	curl -XDELETE 'http://localhost:9200/bus-route-pattern'
 	@echo
 
 ################################################################################

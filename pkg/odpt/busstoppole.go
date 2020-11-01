@@ -7,30 +7,32 @@ import (
 	"time"
 )
 
-// BusstopPole contains information about a bus stop in the world
+type BusStopPoleLookup map[string]*BusStopPole
+
+// BusStopPole contains information about a bus stop in the world
 // that may serve one or more buses
-type BusstopPole struct {
+type BusStopPole struct {
 	Base
 	Date
 	Location
 
-	Title string `json:"dc:title"`
-	Valid time.Time `json:"dct:valid"`
-	Kana string `json:"odpt:kana"`
+	Title          string            `json:"dc:title"`
+	Valid          time.Time         `json:"dct:valid"`
+	Kana           string            `json:"odpt:kana"`
 	TitleLocalized map[string]string `json:"title"`
-	Operator []string `json:"odpt:operator"`
+	Operator       []string          `json:"odpt:operator"`
 }
 
-// LoadBusstopPoleJSON loads all BusstopPole entries from a static JSON
+// LoadBusStopPoleJSON loads all BusStopPole entries from a static JSON
 // file created by the data dump API
-func LoadBusstopPoleJSON(filename string) ([]*BusstopPole, error) {
+func LoadBusStopPoleJSON(filename string) ([]*BusStopPole, error) {
 	f, err := os.Open(filename)
 
 	if err != nil {
 		return nil, fmt.Errorf("os.Open: %w", err)
 	}
 
-	bsp := []*BusstopPole{}
+	bsp := []*BusStopPole{}
 
 	decoder := json.NewDecoder(f)
 
@@ -41,4 +43,15 @@ func LoadBusstopPoleJSON(filename string) ([]*BusstopPole, error) {
 	}
 
 	return bsp, nil
+}
+
+// NewBusStopPoleLookup creates a new lookup table to find station data
+func NewBusStopPoleLookup(poles []*BusStopPole) BusStopPoleLookup {
+	lookup := make(map[string]*BusStopPole, len(poles))
+
+	for _, pole := range poles {
+		lookup[pole.SameAs] = pole
+	}
+
+	return lookup
 }

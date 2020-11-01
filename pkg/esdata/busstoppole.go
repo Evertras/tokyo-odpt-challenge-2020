@@ -6,17 +6,17 @@ import (
 	"github.com/evertras/tokyo-odpt-challenge-2020/pkg/odpt"
 )
 
-type BusstopPole struct {
+type BusStopPole struct {
 	Date     time.Time `json:"date"`
 	Title    string    `json:"title"`
 	Location Location  `json:"location"`
 }
 
-func FromODPTBusstopPole(bsp []*odpt.BusstopPole) []*BusstopPole {
-	esbsp := make([]*BusstopPole, len(bsp))[:0]
+func FromODPTBusStopPole(bsp []*odpt.BusStopPole) []*BusStopPole {
+	esbsp := make([]*BusStopPole, len(bsp))[:0]
 
 	for _, entry := range bsp {
-		esbsp = append(esbsp, &BusstopPole{
+		esbsp = append(esbsp, &BusStopPole{
 			Date:  entry.Date.Date,
 			Title: entry.Title,
 			Location: Location{

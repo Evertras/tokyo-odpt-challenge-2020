@@ -1,120 +1,121 @@
 package esdata
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/elastic/go-elasticsearch/v7"
-	"github.com/elastic/go-elasticsearch/v7/esutil"
 	"github.com/evertras/tokyo-odpt-challenge-2020/pkg/odpt"
 )
 
 type Importer struct {
-	esClient      *elasticsearch.Client
-	stationLookup odpt.StationLookup
+	esClient          *elasticsearch.Client
+	stationLookup     odpt.StationLookup
+	busStopPoleLookup odpt.BusStopPoleLookup
 }
 
-func NewImporter(esClient *elasticsearch.Client, stationLookup odpt.StationLookup) *Importer {
+func NewImporter(
+	esClient *elasticsearch.Client,
+	stationLookup odpt.StationLookup,
+	busStopPoleLookup odpt.BusStopPoleLookup) *Importer {
 	return &Importer{
-		esClient:      esClient,
-		stationLookup: stationLookup,
+		esClient:          esClient,
+		stationLookup:     stationLookup,
+		busStopPoleLookup: busStopPoleLookup,
 	}
 }
 
-func (i *Importer) ImportPassengerSurvey(ctx context.Context, ps []*odpt.PassengerSurvey) error {
-	converted := FromODPTPassengerSurvey(ps, i.stationLookup)
-
-	err := i.prepLocationMapping(IndexNameBusstopPole)
-
-	if err != nil {
-		return fmt.Errorf("i.prepLocationMapping: %w", err)
+func (i *Importer) DeleteAllDataIndices() error {
+	toDelete := []string{
+		IndexNameBusRoutePattern,
+		IndexNameBusStopPole,
+		IndexNamePassengerSurvey,
 	}
 
-	bulk, err := esutil.NewBulkIndexer(esutil.BulkIndexerConfig{
-		Index:  IndexNamePassengerSurvey,
-		Client: i.esClient,
-		OnError: func(ctx context.Context, err error) {
-			log.Println("ERR:", err)
-		},
-	})
-
-	if err != nil {
-		return fmt.Errorf("esutil.NewBulkIndexer: %w", err)
-	}
-
-	for i, entry := range converted {
-		data, err := json.Marshal(entry)
+	for _, index := range toDelete {
+		// Do these separately since they may not all exist
+		res, err := i.esClient.Indices.Delete([]string{index})
 
 		if err != nil {
-			return fmt.Errorf("json.Marshal #%d: %w", i, err)
+			return fmt.Errorf("i.esClient.Indices.Delete %q: %w", index, err)
 		}
 
-		err = bulk.Add(ctx, esutil.BulkIndexerItem{
-			Action: "index",
-			Body:   bytes.NewReader(data),
-		})
-
-		if err != nil {
-			bulk.Close(ctx)
-			return fmt.Errorf("bulk.Close: %w", err)
+		if res.StatusCode/200 != 1 && res.StatusCode != 404 {
+			return fmt.Errorf("unexpected status code for %q: %d", index, res.StatusCode)
 		}
-	}
-
-	err = bulk.Close(ctx)
-
-	if err != nil {
-		return fmt.Errorf("bulk.Close: %w", err)
 	}
 
 	return nil
 }
 
-func (i *Importer) ImportBusstopPole(ctx context.Context, bsp []*odpt.BusstopPole) error {
-	converted := FromODPTBusstopPole(bsp)
-
-	err := i.prepLocationMapping(IndexNameBusstopPole)
+func (i *Importer) ImportPassengerSurvey(ctx context.Context, ps []*odpt.PassengerSurvey) error {
+	err := i.prepLocationMapping(IndexNamePassengerSurvey)
 
 	if err != nil {
 		return fmt.Errorf("i.prepLocationMapping: %w", err)
 	}
 
-	bulk, err := esutil.NewBulkIndexer(esutil.BulkIndexerConfig{
-		Index:  IndexNameBusstopPole,
-		Client: i.esClient,
-		OnError: func(ctx context.Context, err error) {
-			log.Println("ERR:", err)
-		},
-	})
-
+	bulk, err := startBulkAdder(ctx, i.esClient, IndexNamePassengerSurvey)
 	if err != nil {
-		return fmt.Errorf("esutil.NewBulkIndexer: %w", err)
+		return fmt.Errorf("startBulkAdder: %w", err)
 	}
+	defer bulk.closeWithLoggedError(ctx)
 
+	converted := FromODPTPassengerSurvey(ps, i.stationLookup)
 	for i, entry := range converted {
-		data, err := json.Marshal(entry)
+		err = bulk.add(ctx, entry)
 
 		if err != nil {
-			return fmt.Errorf("json.Marshal #%d: %w", i, err)
-		}
-
-		err = bulk.Add(ctx, esutil.BulkIndexerItem{
-			Action: "index",
-			Body:   bytes.NewReader(data),
-		})
-
-		if err != nil {
-			bulk.Close(ctx)
-			return fmt.Errorf("bulk.Close: %w", err)
+			return fmt.Errorf("bulk.add #%d: %w", i, err)
 		}
 	}
 
-	err = bulk.Close(ctx)
+	return nil
+}
 
+func (i *Importer) ImportBusStopPole(ctx context.Context, bsp []*odpt.BusStopPole) error {
+	err := i.prepLocationMapping(IndexNameBusStopPole)
 	if err != nil {
-		return fmt.Errorf("bulk.Close: %w", err)
+		return fmt.Errorf("i.prepLocationMapping: %w", err)
+	}
+
+	bulk, err := startBulkAdder(ctx, i.esClient, IndexNameBusStopPole)
+	if err != nil {
+		return fmt.Errorf("startBulkAdder: %w", err)
+	}
+	defer bulk.closeWithLoggedError(ctx)
+
+	converted := FromODPTBusStopPole(bsp)
+	for i, entry := range converted {
+		err = bulk.add(ctx, entry)
+
+		if err != nil {
+			return fmt.Errorf("bulk.add #%d: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
+func (i *Importer) ImportBusRoutePattern(ctx context.Context, bsr []*odpt.BusRoutePattern) error {
+	err := i.prepLocationMapping(IndexNameBusRoutePattern)
+	if err != nil {
+		return fmt.Errorf("i.prepLocationMapping: %w", err)
+	}
+
+	bulk, err := startBulkAdder(ctx, i.esClient, IndexNameBusRoutePattern)
+	if err != nil {
+		return fmt.Errorf("startBulkAdder: %w", err)
+	}
+	defer bulk.closeWithLoggedError(ctx)
+
+	converted := FromODPTBusRoutePattern(bsr, i.busStopPoleLookup)
+	for i, entry := range converted {
+		err = bulk.add(ctx, entry)
+
+		if err != nil {
+			return fmt.Errorf("bulk.add #%d: %w", i, err)
+		}
 	}
 
 	return nil

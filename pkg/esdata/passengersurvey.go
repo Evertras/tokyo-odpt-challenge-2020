@@ -30,7 +30,7 @@ func FromODPTPassengerSurvey(ps []*odpt.PassengerSurvey, stations odpt.StationLo
 			}
 
 			for _, railway := range entry.Railway {
-				trimmed := RemoveType(railway)
+				trimmed := removeType(railway)
 				split := strings.SplitN(trimmed, ".", 2)
 
 				line := split[0]
@@ -43,11 +43,11 @@ func FromODPTPassengerSurvey(ps []*odpt.PassengerSurvey, stations odpt.StationLo
 					esps = append(esps, &PassengerSurvey{
 						Date:             entry.Date.Date,
 						IncludeAlighting: entry.IncludeAlighting,
-						Operator:         RemoveType(entry.Operator),
+						Operator:         removeType(entry.Operator),
 						SurveyYear:       surveyObject.SurveyYear,
 						PassengersPerDay: surveyObject.PassengerJourneys,
 						Line:             line,
-						Station:          RemoveType(stationData.Title),
+						Station:          removeType(stationData.Title),
 
 						Location: Location{
 							Latitude:  stationData.Latitude,
